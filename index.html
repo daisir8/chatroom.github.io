@@ -2,41 +2,137 @@
 <html>
 
 <head>
-    <title>聊天室</title>
+    <title> 一个唠嗑的地方  </title>
     <meta http-equiv="content-type" content="text/html;charset=utf-8">
-    <style>
-        p {
-            text-align: left;
-            padding-left: 20px;
+<style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .user-list {
+            flex: 1;
+            background-color: #f7f7f7;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .user-card {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .chat-box {
+            flex: 3;
+            background-color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 10px;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .message .sender {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .message .content {
+            background-color: #e2f0cb;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .system-message {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .input-box {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .send-button {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            margin-left: 10px;
+            cursor: pointer;
         }
     </style>
 </head>
 
-<body>
-    <div style="width: 800px;height: 600px;margin: 30px auto;text-align: center">
-        <h1>聊天室</h1>
-        <div style="width: 800px;border: 1px solid gray;height: 300px;">
-            <div style="width: 200px;height: 300px;float: left;text-align: left;">
-                <p><span>当前在线:</span><span id="user_num">0</span></p>
-                <div id="user_list" style="overflow: auto;">
 
-                </div>
-            </div>
-            <div id="msg_list" style="width: 598px;border:  1px solid gray; height: 300px;overflow: scroll;float: left;">
-            </div>
-        </div>
-        <br>
-        <textarea id="msg_box" rows="6" cols="50" onkeydown="confirm(event)"></textarea><br>
-        <input type="button" value="发送" onclick="send()">
-    </div>
+<body>
+	<div class="container">
+		    <div id='ipp' ip={{ip}} port={{port}}></div> 
+	        <div class="user-list">
+	            <h2>在线用户<span id="user_num">0</span>人</h2>
+	            <div id="user_list" style="overflow: auto;">
+	            
+	            </div>
+	        </div>
+	        <div class="chat-box">
+	            <div class="system-message">欢迎来唠嗑!</div>
+	            <div class="message-list" id="msg_list"></div>
+	            <div class="system-message" id="system-message"></div>
+	            <div class="input-container">
+					<input id="msg_box" type="text" class="input-box"  onkeydown="confirm(event)" placeholder="随便说点什么吧...">
+					<button class="send-button" onclick="send()">发送</button>
+				</div>
+	        </div>
+			
+			
+			
+	    </div>
+
 </body>
 
 </html>
 
-<script type="text/javascript">
+<script>
+	
     // 存储用户名到全局变量,握手成功后发送给服务器
     var uname = prompt('请输入用户名', 'user' + uuid(8, 16));
-    var ws = new WebSocket("ws://192.168.101.5:1234");
+    var url = "ws://" + document.getElementById("ipp").getAttribute("ip") + ':' + document.getElementById("ipp").getAttribute("port");
+    console.log(url);
+    var ws = new WebSocket(url);
     ws.onopen = function() {
         var data = "系统消息：建立连接成功";
         listMsg(data);
@@ -118,6 +214,7 @@
         var msg_box = document.getElementById("msg_box");
         var content = msg_box.value;
         var reg = new RegExp("\r\n", "g");
+		const container = document.querySelector('.chat-container');
         content = content.replace(reg, "");
         var msg = {
             'content': content.trim(),
@@ -126,6 +223,7 @@
         sendMsg(msg);
         msg_box.value = '';
         // todo 清除换行符
+		container.scrollTop = container.scrollHeight;
     }
 
     /**
@@ -133,9 +231,12 @@
      */
     function listMsg(data) {
         var msg_list = document.getElementById("msg_list");
-        var msg = document.createElement("p");
-
-        msg.innerHTML = data;
+        var msg = document.createElement("div");
+        msg.className='message';   
+		var msg1 = document.createElement("div");
+		msg1.className='content'; 
+        msg1.innerHTML = data;
+		msg.appendChild(msg1);
         msg_list.appendChild(msg);
         msg_list.scrollTop = msg_list.scrollHeight;
     }
@@ -155,7 +256,8 @@
         }
 
         for (var index in name_list) {
-            var user = document.createElement("p");
+            var user = document.createElement("div");
+			user.className='user-card';
             user.innerHTML = name_list[index];
             user_list.appendChild(user);
         }
